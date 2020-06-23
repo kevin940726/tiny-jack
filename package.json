@@ -1,0 +1,19 @@
+{
+  "name": "tiny-jack",
+  "version": "0.0.0",
+  "description": "Dedicated Discord bot for Underground",
+  "main": "index.js",
+  "repository": "https://github.com/kevin940726/tiny-jack",
+  "author": "Kai Hao",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "discord.js": "^12.2.0"
+  },
+  "devDependencies": {
+    "prettier": "2.0.5"
+  },
+  "prettier": {
+    "singleQuote": true
+  }
+}
