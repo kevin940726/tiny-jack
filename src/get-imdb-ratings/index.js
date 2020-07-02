@@ -22,21 +22,21 @@ async function getMovieInfo(titleOrID) {
   ).then((res) => res.json());
 
   const ratings = {
-    imdb: null,
-    rt: null,
-    metacritic: null,
+    imdb: NaN,
+    rt: NaN,
+    metacritic: NaN,
   };
 
   Ratings.forEach(({ Source, Value }) => {
     switch (Source) {
       case 'Internet Movie Database':
-        ratings.imdb = Value.split('/')[0];
+        ratings.imdb = parseInt(Value.split('/')[0], 10);
         break;
       case 'Rotten Tomatoes':
         ratings.rt = parseInt(Value, 10);
         break;
       case 'Metacritic':
-        ratings.metacritic = Value.split('/')[0];
+        ratings.metacritic = parseInt(Value.split('/')[0], 10);
         break;
       default:
         break;
@@ -79,17 +79,25 @@ async function getIMDbRatings(message) {
         description,
         url,
         fields: [
-          { name: 'IMDb', value: `⭐️${ratings.imdb}`, inline: true },
-          {
+          !Number.isNaN(ratings.imdb) && {
+            name: 'IMDb',
+            value: `⭐️${ratings.imdb}`,
+            inline: true,
+          },
+          !Number.isNaN(ratings.rt) && {
             name: 'Rotten Tomatoes',
             value: `${ratings.rt > 60 ? '🍅' : '💩'} ${ratings.rt}%`,
             inline: true,
           },
-          { name: 'Metacritic', value: ratings.metacritic, inline: true },
-          { name: 'Director', value: director },
-          { name: 'Writer', value: writer, inline: true },
-          { name: 'Actors', value: actors },
-        ],
+          !Number.isNaN(ratings.metacritic) && {
+            name: 'Metacritic',
+            value: ratings.metacritic,
+            inline: true,
+          },
+          director && { name: 'Director', value: director },
+          writer && { name: 'Writer', value: writer, inline: true },
+          actors && { name: 'Actors', value: actors },
+        ].filter(Boolean),
       },
     });
   }
