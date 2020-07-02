@@ -1,10 +1,38 @@
 const fetch = require('node-fetch');
 const querystring = require('querystring');
 
+async function searchForMovieTitle(title) {
+  try {
+    const res = await fetch(
+      `https://omdbapi.com/?${querystring.stringify({
+        apikey: process.env.OMDB_API_KEY,
+        s: title,
+      })}`
+    );
+
+    const {
+      Search: [{ imdbID }],
+    } = await res.json();
+
+    return imdbID;
+  } catch (err) {
+    return null;
+  }
+}
+
 async function getMovieInfo(titleOrID) {
   const isID = /tt\d+/.test(titleOrID);
 
+  const res = await fetch(
+    `https://omdbapi.com/?${querystring.stringify({
+      apikey: process.env.OMDB_API_KEY,
+      ...(isID ? { i: titleOrID } : { t: titleOrID }),
+    })}`
+  );
+
   const {
+    Response,
+    Error,
     Ratings,
     Title,
     Year,
@@ -14,12 +42,19 @@ async function getMovieInfo(titleOrID) {
     Writer,
     Actors,
     Plot,
-  } = await fetch(
-    `https://omdbapi.com/?${querystring.stringify({
-      apikey: process.env.OMDB_API_KEY,
-      ...(isID ? { i: titleOrID } : { t: titleOrID }),
-    })}`
-  ).then((res) => res.json());
+  } = await res.json();
+
+  if (Response !== 'True') {
+    if (Error === 'Movie not found!') {
+      const matchedID = await searchForMovieTitle(titleOrID);
+
+      if (matchedID) {
+        return getMovieInfo(matchedID);
+      }
+    }
+
+    return null;
+  }
 
   const ratings = {
     imdb: NaN,
@@ -45,7 +80,7 @@ async function getMovieInfo(titleOrID) {
 
   return {
     ratings,
-    image: Poster,
+    image: Poster !== 'N/A' && Poster,
     name: `${Title} (${Year})`,
     description: Plot,
     url: `https://imdb.com/title/${imdbID}/`,
@@ -56,50 +91,64 @@ async function getMovieInfo(titleOrID) {
 }
 
 async function getIMDbRatings(message) {
-  if (message.content.startsWith('!imdb ')) {
-    const title = message.content.split('!imdb')[1].trim();
+  try {
+    if (message.content.startsWith('!imdb ')) {
+      const title = message.content.split('!imdb')[1].trim();
 
-    const {
-      ratings,
-      name,
-      url,
-      image,
-      description,
-      director,
-      writer,
-      actors,
-    } = await getMovieInfo(title);
+      const movieInfo = await getMovieInfo(title);
 
-    await message.channel.send({
-      embed: {
-        title: name,
-        thumbnail: {
-          url: image,
-        },
-        description,
+      if (!movieInfo) {
+        message.channel.send('Movie not found.');
+      }
+
+      const {
+        ratings,
+        name,
         url,
-        fields: [
-          !Number.isNaN(ratings.imdb) && {
-            name: 'IMDb',
-            value: `⭐️${ratings.imdb}`,
-            inline: true,
-          },
-          !Number.isNaN(ratings.rt) && {
-            name: 'Rotten Tomatoes',
-            value: `${ratings.rt > 60 ? '🍅' : '💩'} ${ratings.rt}%`,
-            inline: true,
-          },
-          !Number.isNaN(ratings.metacritic) && {
-            name: 'Metacritic',
-            value: ratings.metacritic,
-            inline: true,
-          },
-          director && { name: 'Director', value: director, inline: true },
-          writer && { name: 'Writer', value: writer, inline: true },
-          actors && { name: 'Actors', value: actors },
-        ].filter(Boolean),
-      },
-    });
+        image,
+        description,
+        director,
+        writer,
+        actors,
+      } = movieInfo;
+
+      await message.channel.send({
+        embed: {
+          title: name,
+          ...(image
+            ? {
+                thumbnail: {
+                  url: image,
+                },
+              }
+            : {}),
+          description,
+          url,
+          fields: [
+            !Number.isNaN(ratings.imdb) && {
+              name: 'IMDb',
+              value: `⭐️${ratings.imdb}`,
+              inline: true,
+            },
+            !Number.isNaN(ratings.rt) && {
+              name: 'Rotten Tomatoes',
+              value: `${ratings.rt > 60 ? '🍅' : '💩'} ${ratings.rt}%`,
+              inline: true,
+            },
+            !Number.isNaN(ratings.metacritic) && {
+              name: 'Metacritic',
+              value: ratings.metacritic,
+              inline: true,
+            },
+            director && { name: 'Director', value: director, inline: true },
+            writer && { name: 'Writer', value: writer, inline: true },
+            actors && { name: 'Actors', value: actors },
+          ].filter(Boolean),
+        },
+      });
+    }
+  } catch (err) {
+    console.error(err);
   }
 }
 
