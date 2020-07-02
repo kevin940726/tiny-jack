@@ -94,7 +94,7 @@ async function getIMDbRatings(message) {
             value: ratings.metacritic,
             inline: true,
           },
-          director && { name: 'Director', value: director },
+          director && { name: 'Director', value: director, inline: true },
           writer && { name: 'Writer', value: writer, inline: true },
           actors && { name: 'Actors', value: actors },
         ].filter(Boolean),
