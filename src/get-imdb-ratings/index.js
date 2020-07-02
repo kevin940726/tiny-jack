@@ -65,7 +65,7 @@ async function getMovieInfo(titleOrID) {
   Ratings.forEach(({ Source, Value }) => {
     switch (Source) {
       case 'Internet Movie Database':
-        ratings.imdb = parseInt(Value.split('/')[0], 10);
+        ratings.imdb = parseFloat(Value.split('/')[0]);
         break;
       case 'Rotten Tomatoes':
         ratings.rt = parseInt(Value, 10);
