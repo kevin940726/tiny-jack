@@ -4,8 +4,9 @@ const http = require('http');
 const Discord = require('discord.js');
 
 // Plugins
-const attachTSPlaygroundURLs = require('./src/attach-ts-playground-urls');
-const liveNotifications = require('./src/live-notifications');
+const attachTSPlaygroundURLs = require('./attach-ts-playground-urls');
+const liveNotifications = require('./live-notifications');
+const getIMDbRatings = require('./get-imdb-ratings');
 
 // Health check
 http
@@ -23,5 +24,6 @@ client.on('ready', () => {
 
 attachTSPlaygroundURLs(client);
 liveNotifications(client);
+getIMDbRatings(client);
 
 client.login(process.env.DISCORD_BOT_TOKEN);
