@@ -21,7 +21,7 @@ function typescriptPlayground() {
           node.value
         );
 
-        const url = `https://www.typescriptlang.org/v2/play#code/${compressedCode}`;
+        const url = `https://www.typescriptlang.org/play#code/${compressedCode}`;
 
         file.data.playgroundURLs.push(url);
       }
