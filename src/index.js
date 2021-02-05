@@ -23,7 +23,7 @@ client.on('ready', () => {
 });
 
 attachTSPlaygroundURLs(client);
-liveNotifications(client);
+// liveNotifications(client);
 getIMDbRatings(client);
 
 client.login(process.env.DISCORD_BOT_TOKEN);
